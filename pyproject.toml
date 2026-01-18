@@ -1,0 +1,8 @@
+[project]
+name = "pulsews"
+version = "0.0.1-dev"
+description = "Fully featured WebSocket stresser tool written in Python."
+requires-python = ">=3.10"
+dependencies = [
+    "websockets>=16.0",
+]
