@@ -1,0 +1,42 @@
+name: PulseWS CI workflow
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    branches:
+      - main
+      - dev
+
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      # 2️⃣ Setup Python
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      # 3️⃣ Install uv
+      - name: Install uv
+        run: pip install uv
+
+      # 4️⃣ Sync dependencies
+      - name: Sync dependencies
+        run: uv sync
+
+      # 5️⃣ Lint e format check con Ruff
+      - name: Run Ruff Lint/Format Check
+        run: uv run ruff .
+
+      # 6️⃣ Run tests
+      - name: Run Tests
+        run: uv run python -m pytest

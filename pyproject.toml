@@ -1,8 +1,43 @@
 [project]
 name = "pulsews"
-version = "0.0.1-dev"
+version = "0.0.1-dev.1"
 description = "Fully featured WebSocket stresser tool written in Python."
 requires-python = ">=3.10"
 dependencies = [
+    "deprecated>=1.3.1",
     "websockets>=16.0",
 ]
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.5.1",
+    "pytest>=9.0.2",
+    "ruff>=0.14.13",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "C", "B"]
+ignore = [
+    "W191",
+    "E111",
+    "E114",
+    "E117",
+    "D206",
+    "D300",
+    "Q000",
+    "Q001",
+    "Q002",
+    "Q003",
+    "COM812",
+    "COM819",
+    "ISC002",
+    "E501"
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.format]
+quote-style = "single"
+indent-style = "tab"
+docstring-code-format = false
