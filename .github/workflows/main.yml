@@ -33,10 +33,14 @@ jobs:
       - name: Sync dependencies
         run: uv sync
 
-      # 5️⃣ Lint e format check con Ruff
-      - name: Run Ruff Lint/Format Check
-        run: uv run ruff .
+      # 5️⃣ Lint via Ruff
+      - name: Run Ruff Lint Check
+        run: uv run ruff check .
+        
+      # 6️⃣ Format check via ruff
+      - name: Run Ruff Format Check
+        run: uv run ruff format --check .
 
-      # 6️⃣ Run tests
+      # 7️⃣ Run tests
       - name: Run Tests
         run: uv run python -m pytest
