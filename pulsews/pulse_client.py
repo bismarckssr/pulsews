@@ -3,10 +3,11 @@ import logging
 from dataclasses import dataclass, field
 
 import websockets
+import asyncio
 from websockets import CloseCode
 from websockets.asyncio.client import connect, ClientConnection
 
-from .definitions import PulseHandler
+from .definitions import PulseHandler, PulseLocalState
 
 logger = logging.getLogger(__name__)
 
@@ -28,8 +29,10 @@ class PulseClient:
 	"""
 
 	client_id: int
+	local_state: PulseLocalState
 	websocket_server_url: str = ''
 	message_handler_list: list[PulseHandler] = field(default_factory=list[PulseHandler])
+
 	mean_delay: float = field(default=0.0, init=False)
 
 	async def connect(self):
@@ -59,7 +62,30 @@ class PulseClient:
 		except websockets.exceptions.ConnectionClosedError:
 			pass
 
-	async def rx_tx_loop(self, websocket: ClientConnection):
+	async def process_handler(self, handler, json_message, websocket, local_state):
+		"""
+		Process a single handler for a given message.
+
+		If handler.action is a coroutine, it will be awaited.
+		Sends the result back on the websocket if it exists.
+		"""
+		try:
+			if asyncio.iscoroutinefunction(handler.action):
+				result = await handler.action(json_message, local_state)
+			else:
+				result = handler.action(json_message, local_state)
+
+			if result:
+				await websocket.send(result)
+			else:
+				logger.debug(f'No answer sent for {json_message} by {handler}')
+
+		except Exception as e:
+			logger.exception(
+				f'Error processing handler {handler} for message {json_message}: {e}'
+			)
+
+	async def rx_tx_loop(self, websocket):
 		"""Run the receive/transmit loop for processing websocket messages.
 
 		Continuously listens for messages from the websocket server.
@@ -76,10 +102,13 @@ class PulseClient:
 			for handler in self.message_handler_list:
 				if handler.is_triggered(json_object=json_message):
 					logger.debug(f'{json_message} is triggering handler {handler}')
-					result = handler.action(
-						message
-					)  # sync for now, potentially async later
-					await websocket.send(result)
-					break
+
+					# Launch handler as a separate task to avoid possible blocking
+					asyncio.create_task(
+						self.process_handler(
+							handler, json_message, websocket, self.local_state
+						)
+					)
+					break  # Only trigger the first matching handler
 			else:
 				logger.warning(f'{json_message} is missing handler')

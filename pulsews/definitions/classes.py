@@ -3,6 +3,13 @@ from typing import Callable
 from deprecated import deprecated
 from pulsews.decorators import since
 from .functions import should_trigger
+from abc import ABC
+from typing import Any
+
+
+@dataclass
+class PulseLocalState(ABC):  # noqa: B024
+	pass
 
 
 @dataclass
@@ -20,7 +27,7 @@ class ActivateObject:
 	"""
 
 	path: list[str]
-	value: str
+	value: Any
 
 
 @dataclass
